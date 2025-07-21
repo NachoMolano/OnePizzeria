@@ -1,5 +1,5 @@
 """
-Smart Checkpointer for LangGraph using the hybrid memory approach.
+ Checkpointer for LangGraph using the hybrid memory approach.
 Much more efficient than the original checkpointer.
 """
 
@@ -8,15 +8,15 @@ from typing import Any, Optional, Sequence, Dict, Iterator, Tuple
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.base import BaseCheckpointSaver, Checkpoint, CheckpointMetadata
 
-from .smart_memory import smart_memory, ConversationContext
+from .memory import memory, ConversationContext
 from .state import ChatState
 
 logger = logging.getLogger(__name__)
 
 
-class SmartCheckpointer(BaseCheckpointSaver):
+class Checkpointer(BaseCheckpointSaver):
     """
-    Optimized checkpointer using SmartMemoryManager.
+    Optimized checkpointer using MemoryManager.
     
     This checkpointer is much more efficient than the original because:
     1. Only stores essential conversation data
@@ -27,12 +27,12 @@ class SmartCheckpointer(BaseCheckpointSaver):
     
     def __init__(self):
         super().__init__()
-        self.memory_manager = smart_memory
-        logger.info("SmartCheckpointer initialized")
+        self.memory_manager = memory
+        logger.info("Checkpointer initialized")
     
     def get(self, config: RunnableConfig) -> Optional[Checkpoint]:
         """
-        Load checkpoint from smart memory.
+        Load checkpoint from  memory.
         """
         try:
             thread_id = config.get("configurable", {}).get("thread_id")
@@ -74,7 +74,7 @@ class SmartCheckpointer(BaseCheckpointSaver):
     
     def put(self, config: RunnableConfig, checkpoint: Checkpoint) -> CheckpointMetadata:
         """
-        Save checkpoint to smart memory.
+        Save checkpoint to  memory.
         """
         try:
             thread_id = config.get("configurable", {}).get("thread_id")
@@ -116,19 +116,19 @@ class SmartCheckpointer(BaseCheckpointSaver):
 
 class ChatStateManager:
     """
-    Manager for ChatState that integrates with SmartMemoryManager.
-    This handles the conversion between LangGraph state and our smart memory.
+    Manager for ChatState that integrates with MemoryManager.
+    This handles the conversion between LangGraph state and our  memory.
     """
     
     def __init__(self):
-        self.memory_manager = smart_memory
+        self.memory_manager = memory
     
     async def load_state_for_user(self, user_id: str, new_message: str) -> ChatState:
         """
         Load complete chat state for a user including memory.
         """
         try:
-            # Get conversation context from smart memory
+            # Get conversation context from  memory
             context = await self.memory_manager.get_conversation(user_id)
             
             # Get customer data from database
@@ -188,7 +188,7 @@ class ChatStateManager:
     
     async def save_state_for_user(self, state: ChatState, ai_response):
         """
-        Save chat state to smart memory.
+        Save chat state to  memory.
         """
         try:
             user_id = state["user_id"]
@@ -255,5 +255,5 @@ class ChatStateManager:
 
 
 # Global instances
-smart_checkpointer = SmartCheckpointer()
+checkpointer = Checkpointer()
 state_manager = ChatStateManager() 

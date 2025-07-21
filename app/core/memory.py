@@ -1,5 +1,5 @@
 """
-Smart Memory Manager for the pizzeria chatbot.
+ Memory Manager for the pizzeria chatbot.
 Implements hybrid approach: key context + recent messages with intelligent cleanup.
 """
 
@@ -85,14 +85,14 @@ class ConversationContext:
         return context
 
 
-class SmartMemoryManager:
+class MemoryManager:
     """
     Intelligent memory manager for multi-user conversations.
     Uses hybrid approach with Supabase for persistent storage.
     """
     
     def __init__(self):
-        self.table_name = "smart_conversation_memory"
+        self.table_name = "conversation_memory"
         self.ttl_days = 7  # Auto-cleanup after 7 days of inactivity
         self.max_message_length = 1000  # Truncate very long messages
         
@@ -235,4 +235,4 @@ class SmartMemoryManager:
 
 
 # Global instance
-smart_memory = SmartMemoryManager() 
+memory = MemoryManager() 

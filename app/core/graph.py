@@ -57,45 +57,25 @@ async def load_state_node(state: ChatState) -> Dict[str, Any]:
     user_id = state["user_id"]
     new_message = state["messages"][-1].content if state["messages"] else ""
     
-    logger.info(f"Loading  state for user: {user_id}")
+    print(f"Loading  state for user: {user_id}")
     
     try:
         # CRITICAL: Always check if customer is registered first
         from .tools import get_customer
-        customer = get_customer.invoke({"user_id": user_id})
+        customer = get_customer.invoke(user_id)
         
         # Load complete state using our  state manager
         complete_state = await state_manager.load_state_for_user(user_id, new_message)
         
         # Determine if this is a new conversation (no previous messages in memory)
         is_new_conversation = len(complete_state.get("messages", [])) == 0
-        
-        # IMPORTANT: Detect user intent to set correct current_step
-        user_intent = _detect_user_intent(state)
-        logger.info(f"User intent detected: {user_intent}")
-        
-        # Set current_step based on user intent
-        if user_intent == "full_menu":
-            current_step = "full_menu"
-        elif user_intent == "menu":
-            current_step = "menu"
-        elif user_intent == "order":
-            current_step = "order"
-        elif user_intent == "confirmation":
-            current_step = "confirmation"
-        elif is_new_conversation:
-            # This is the first interaction - start with greeting
-            current_step = "greeting"
-        else:
-            # Continuing conversation - use general or detected intent
-            current_step = user_intent if user_intent != "general" else "general"
-        
+    
         needs_customer_info = not customer or not customer.get("last_name")
         
         # Return the loaded state data
         return {
             "customer": customer,  # Always include customer data (empty dict if not found)
-            "current_step": current_step,
+            "current_step": "",
             "active_order": complete_state.get("active_order", {}),
             "needs_customer_info": needs_customer_info,
             "ready_to_order": bool(customer and customer.get("last_name")),
@@ -112,6 +92,7 @@ async def load_state_node(state: ChatState) -> Dict[str, Any]:
             "ready_to_order": False
         }
 
+def 
 
 def conversation_node(state: ChatState) -> Dict[str, Any]:
     """

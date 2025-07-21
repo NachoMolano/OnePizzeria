@@ -23,6 +23,9 @@ langgraph = "^0.5.1"
 langgraph-checkpoint = "^2.1.0"
 langchain-groq = "^0.3.5"
 pytest = "^8.4.1"
+python-telegram-bot = "^22.3"
+telegram = "^0.0.1"
+openai = "^1.97.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.1"

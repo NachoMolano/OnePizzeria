@@ -107,24 +107,6 @@ def update_customer(user_id: str, **updates) -> Dict[str, Any]:
 # =============================================================================
 
 @tool
-def get_menu() -> List[Dict[str, Any]]:
-    """
-    Get all active menu items from the database.
-    """
-    try:
-        result = supabase.table("menu").select("*").eq("active", True).execute()
-        if result.data:
-            logger.info(f"Menu retrieved: {len(result.data)} items")
-            return result.data
-        else:
-            logger.warning("No menu items found")
-            return []
-    except Exception as e:
-        logger.error(f"Error getting menu: {e}")
-        return []
-
-
-@tool
 def search_menu(query: str) -> List[Dict[str, Any]]:
     """
     Search menu items by name or description.

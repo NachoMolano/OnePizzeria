@@ -3,7 +3,7 @@ Clean state definition for the pizzeria chatbot.
 This defines what information flows through our conversation graph.
 """
 
-from typing import TypedDict, Annotated, Sequence, Optional, Dict, Any
+from typing import TypedDict, Annotated, Sequence, Optional, Dict, Any, List
 from langchain_core.messages import BaseMessage
 
 
@@ -17,6 +17,10 @@ class ChatState(TypedDict):
     # Core conversation data
     user_id: str                                    # Unique identifier for the user
     messages: Annotated[Sequence[BaseMessage], lambda x, y: x + y]  # Conversation history
+    
+    # Contextual information
+    mensaje_dividido: Optional[List[Dict[str, str]]] = None
+    tool_results: Optional[Dict[str, Any]]
     
     # Customer information
     customer: Optional[Dict[str, Any]]              # Customer data from database

@@ -9,12 +9,13 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
+from langchain_core.runnables import RunnableConfig
 
 from .state import ChatState
 from .tools import ALL_TOOLS, get_menu
 from .prompts import (
     SYSTEM_PROMPT, CONTEXT_NEW_CUSTOMER, CONTEXT_RETURNING_CUSTOMER,
-    CONTEXT_MENU_INQUIRY, CONTEXT_ORDER_START, ERROR_GENERAL, CONTEXT_CONFUSION
+    CONTEXT_MENU_INQUIRY, CONTEXT_ORDER_START, ERROR_GENERAL, CONTEXT_CONFUSION, TOOLS_EXECUTION_PROMPT
 )
 from .checkpointer import state_manager
 from langgraph.checkpoint.memory import MemorySaver
@@ -92,7 +93,48 @@ async def load_state_node(state: ChatState) -> Dict[str, Any]:
             "ready_to_order": False
         }
 
-def 
+async def agent_with_tools_cycle(state: ChatState) -> ChatState:
+    try:
+
+        # Instrucción al modelo: secciones e indicación de usar herramientas
+        mensaje_div = state.mensaje_dividido or []
+        prompt = [
+            {
+                "role": "system",
+                "content": TOOLS_EXECUTION_PROMPT
+            },
+            {
+                "role": "user",
+                "content": "\n".join([f"{i+1}. [{s['tipo']}] {s['contenido']}" for i, s in enumerate(mensaje_div)])
+            }
+        ]
+
+        # Ejecutar el modelo con herramientas habilitadas
+        response = await llm_with_tools.ainvoke(prompt, config=RunnableConfig())
+
+        # Añadir la respuesta generada por el LLM (tool_calls)
+        state.messages.append(response)
+
+        # Guardar tool_calls en el estado
+        if not hasattr(state, "tool_results") or not state.tool_results:
+            state.tool_results = {}
+
+        if hasattr(response, "tool_calls") and response.tool_calls:
+            for call in response.tool_calls:
+                name = call.get("name", "unknown_tool")
+                args = call.get("args", {})
+                # Guardamos los argumentos que el agente decidió usar
+                state.tool_results[name] = args
+
+        print(f"🛠️ Tools sugeridas: {list(state.tool_results.keys())}")
+        return state
+
+    except Exception as e:
+        from langchain_core.messages import AIMessage
+        print(f"[ERROR] Agent with tools failed: {e}")
+        error_msg = AIMessage(content="Hubo un error procesando las herramientas.")
+        state.messages.append(error_msg)
+        return state
 
 def conversation_node(state: ChatState) -> Dict[str, Any]:
     """
